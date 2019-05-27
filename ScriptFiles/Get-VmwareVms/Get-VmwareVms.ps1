@@ -1,20 +1,37 @@
 [CmdletBinding()]
 param(
+    [string]$VmName,
     [string]$VmxFolder = "~/Virtual Machines"
 )
 
-$VmwareVmFolders = Get-ChildItem -Path $VmxFolder
+begin {
+    filter VmNameParse {
+        if ($_.BaseName -like "$($VmName)*") {
+            $_
+        }
+    }
 
-$VirtualMachines = foreach ($Vm in $VmwareVmFolders) {
-    $VmxFile = Get-ChildItem -Path $Vm | Where-Object -Property "Extension" -eq ".vmx"
-    [pscustomobject]@{
-        "Name" = $Vm.BaseName;
-        "Path" = $Vm.FullName;
-        "VmxInfo" = ([pscustomobject]@{
-            "VmxFile" = $VmxFile.Name;
-            "Path" = $VmxFile.FullName
-        })
+    $VmxFolder = (Get-Item -Path $VmxFolder)
+
+    $VmwareVmFolders = Get-ChildItem -Path $VmxFolder
+
+    if ($VmName) {
+        Write-Verbose "Parsing for specified VM."
+        $VmwareVmFolders = $VmwareVmFolders | VmNameParse
     }
 }
 
-return $VirtualMachines
+process {
+    $VirtualMachines = foreach ($Vm in $VmwareVmFolders) {
+        $VmxFile = Get-ChildItem -Path $Vm | Where-Object -Property "Extension" -eq ".vmx"
+        [pscustomobject]@{
+            "Name"     = $Vm.Name;
+            "Path"     = "$($Vm.Name)/$($VmxFile.Name)";
+            "Location" = $VmxFolder
+        }
+    }
+}
+
+end {
+    $VirtualMachines
+}
