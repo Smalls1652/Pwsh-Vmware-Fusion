@@ -1,0 +1,1 @@
+../ScriptFiles/Get-VmwareVms/Get-VmwareVms.ps1 -VmName "Ubuntu" | ../ScriptFiles/Restart-VmwareVm/Restart-VmwareVm.ps1
